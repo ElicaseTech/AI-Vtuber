@@ -805,6 +805,58 @@ class Common:
         else:
             return random.choice(strings)
 
+    # llm响应内容<> </>标签内容过滤 主要针对deepseek返回
+    def llm_resp_content_filter_tags(self, text: str, filter_state: dict) -> str:
+        """
+        过滤标签内容的辅助函数
+        
+        Args:
+            text: 要处理的文本
+            filter_state: 过滤状态字典，包含：
+                - is_filtering: 是否正在过滤
+                - current_tag: 当前正在处理的标签
+                - buffer: 未处理完的文本缓冲
+        
+        Returns:
+            过滤后的文本
+        """
+        result = ""
+        i = 0
+
+        # logger.debug(f"[过滤] 标签过滤前：{text}")
+        # logger.debug(f"[过滤] 过滤状态：{filter_state}")
+        
+        while i < len(text):
+            if text[i] == '<':
+                # logger.debug(f"[过滤] 发现开始标签：{text[i]}")
+                # 可能是开始标签
+                tag_end = text.find('>', i)
+                if tag_end != -1:
+                    tag = text[i:tag_end+1]
+                    if tag.startswith('</'):
+                        # logger.debug(f"[过滤] 发现结束标签：{tag}")
+                        # 结束标签
+                        tag_name = tag[2:-1]
+                        if filter_state['is_filtering'] and tag_name == filter_state['current_tag']:
+                            filter_state['is_filtering'] = False
+                            filter_state['current_tag'] = None
+                    else:
+                        # logger.debug(f"[过滤] 发现开始标签：{tag}")
+                        # 开始标签
+                        tag_name = tag[1:-1]
+                        filter_state['is_filtering'] = True
+                        filter_state['current_tag'] = tag_name
+                    i = tag_end + 1
+                    continue
+                    
+            if not filter_state['is_filtering']:
+                # logger.debug(f"[过滤] 发现非过滤状态：{text[i]}")
+                result += text[i]
+            i += 1
+
+        # logger.debug(f"[过滤] 标签过滤后：{result}")
+        return result
+
     """
     
             .@@@             @@@        @@^ =@@@@@@@@    /@@ /@@              =@@@@@*,@@\]]]]  ,@@@@@@@@@@@@*                      .@@@         @@/.\]`@@@       =@@\]]]]]]]   =@@..@@@@@@@@@   =@@\   /@@^           
@@ -1348,7 +1400,8 @@ class Common:
             dict|str: 包含响应的 JSON数据 | 字符串数据
         """
         try:
-            await self.send_async_request("http://124.221.164.49:8001/heartbeat", "POST", None)
+            pass
+            # await self.send_async_request("http://124.221.164.49:8001/heartbeat", "POST", None)
         except Exception as e:
             # logger.error(traceback.format_exc())
             # logger.error(f"请求出错: {e}")

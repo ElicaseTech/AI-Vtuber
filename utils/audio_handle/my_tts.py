@@ -642,67 +642,11 @@ class MY_TTS:
             # 构造完整的 Data URL
             return f"data:{mime_type};base64,{base64_encoded_data}"
 
-        async def websocket_client(data_json):
-            try:
-                async with websockets.connect(data["ws_ip_port"]) as websocket:
-                    # 设置最大连接时长（例如 30 秒）
-                    return await asyncio.wait_for(websocket_client_logic(websocket, data_json), timeout=30)
-            except asyncio.TimeoutError:
-                logger.error("gpt_sovits WebSocket连接超时")
-                return None
-
-        async def websocket_client_logic(websocket, data_json):
-            async for message in websocket:
-                logger.debug(f"Received message: {message}")
-
-                # 解析收到的消息
-                data = json.loads(message)
-                # 检查是否是预期的消息
-                if "msg" in data:
-                    if data["msg"] == "send_hash":
-                        # 发送响应消息
-                        response = json.dumps({"session_hash":"3obpzfqql7f","fn_index":3})
-                        await websocket.send(response)
-                        logger.debug(f"Sent message: {response}")
-                    elif data["msg"] == "send_data":
-                        # audio_path = "F:\\GPT-SoVITS\\raws\\ikaros\\1.wav"
-                        audio_path = data_json["ref_audio_path"]
-
-                        # 发送响应消息
-                        response = json.dumps(
-                            {
-                                "session_hash":"3obpzfqql7f",
-                                "fn_index":3,
-                                "data":[
-                                    {
-                                        "data": file_to_data_url(audio_path),
-                                        "name": os.path.basename(audio_path)
-                                    },
-                                    data_json["prompt_text"], 
-                                    data_json["prompt_language"], 
-                                    data_json["content"], 
-                                    data_json["language"],
-                                    data_json["cut"]
-                                ]
-                            }
-                        )
-                        await websocket.send(response)
-                        logger.debug(f"Sent message: {response}")
-                    elif data["msg"] == "process_completed":
-                        return data["output"]["data"][0]["name"]
-                    
+               
         try:
             logger.debug(f"data={data}")
             
-            if data["type"] == "gradio":
-                # 调用函数并等待结果
-                voice_tmp_path = await websocket_client(data)
-
-                if voice_tmp_path:
-                    new_file_path = self.common.move_file(voice_tmp_path, os.path.join(self.audio_out_path, 'gpt_sovits_' + self.common.get_bj_time(4)), 'gpt_sovits_' + self.common.get_bj_time(4))
-
-                return new_file_path
-            elif data["type"] == "gradio_0322":
+            if data["type"] == "gradio_0322":
                 client = Client(data["gradio_ip_port"])
                 voice_tmp_path = client.predict(
                     data["content"],	# str  in '需要合成的文本' Textbox component
@@ -1395,5 +1339,29 @@ class MY_TTS:
         except Exception as e:
             logger.error(traceback.format_exc())
             logger.error(f'MultiTTS未知错误，请检查您的MultiTTS 接口服务是否启动/配置/网络是否正确，报错内容: {e}')
+        
+        return None
+
+    
+    async def melotts_api(self, data):
+        try:
+            API_URL = urljoin(data["melotts"]["api_ip_port"], "/tts")
+
+            data_json = {
+                "text": data["content"],
+                "speaker_id": int(data["melotts"]["speaker_id"]),
+                "sdp_ratio": float(data["melotts"]["sdp_ratio"]),
+                "noise_scale": float(data["melotts"]["noise_scale"]),
+                "noise_scale_w": float(data["melotts"]["noise_scale_w"]),
+                "speed": float(data["melotts"]["speed"]),
+            }
+                
+            logger.debug(f"data_json={data_json}")
+            logger.debug(f"url={API_URL}")
+
+            return await self.download_audio("melotts", API_URL, self.timeout, "post", json_data=data_json)
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error(f'MeloTTS未知错误，请检查您的MeloTTS 接口服务是否启动/配置/网络是否正确，报错内容: {e}')
         
         return None

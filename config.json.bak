@@ -568,7 +568,9 @@
     "api_ip_port": "http://172.26.189.21",
     "type": "聊天助手",
     "api_key": "app-64xu0vQjP2kxN4DKR8Ch7ZGY",
-    "history_enable": true
+    "history_enable": true,
+    "stream": true,
+    "custom_params": "{\n\"prompt\": \"{{comment}}\"\n}"
   },
   "volcengine": {
     "model": "ep-20240904192312-r4rkc",
@@ -787,7 +789,6 @@
     "type": "api",
     "gradio_ip_port": "http://127.0.0.1:7860",
     "api_ip_port": "http://127.0.0.1:9880",
-    "ws_ip_port": "ws://localhost:9872/queue/join",
     "ref_audio_path": "F:\\GPT-SoVITS\\raws\\ikaros\\21.wav",
     "prompt_text": "マスター、どうりょくろか、いいえ、なんでもありません",
     "prompt_language": "日文",
@@ -966,6 +967,19 @@
     "volume": 50,
     "pitch": 50,
     "voice": ""
+  },
+  "melotts": {
+    "api_ip_port": "http://127.0.0.1:8101",
+    "language": "ZH",
+    "device": "auto",
+    "use_hf": true,
+    "config_path": "",
+    "ckpt_path": "",
+    "speaker_id": 0,
+    "sdp_ratio": 0.2,
+    "noise_scale": 0.6,
+    "noise_scale_w": 0.8,
+    "speed": 1
   },
   "choose_song": {
     "enable": false,
@@ -2034,7 +2048,8 @@
         "chattts": true,
         "cosyvoice": true,
         "f5_tts": true,
-        "multitts": true
+        "multitts": true,
+        "melotts": true
       },
       "svc": {
         "ddsp_svc": true,

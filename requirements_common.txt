@@ -430,7 +430,7 @@ omegaconf==2.3.0
     # via hydra-core
 onnxruntime==1.18.1
     # via faster-whisper
-openai==1.37.1
+openai==1.58.1
 openapi-schema-pydantic==1.2.4
     # via langchain
 opencv-python==4.10.0.84
